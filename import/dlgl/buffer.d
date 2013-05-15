@@ -52,10 +52,25 @@ class Buffer
 		setData(data);
 	}
 
-	///
-	void bind()
+	/**
+	 * The `target` parameter specifies which buffer target to bind to,
+	 *  e.g. GL_ARRAY_BUFFER or GL_ELEMENT_ARRAY_BUFFER
+	 */
+	void bind(GLenum target)
 	{
-		gl!"BindBuffer"(GL_ARRAY_BUFFER, buffer);
+		gl!"BindBuffer"(target, buffer);
+	}
+
+	///
+	void bindArray()
+	{
+		bind(GL_ARRAY_BUFFER);
+	}
+
+	///
+	void bindElementArray()
+	{
+		bind(GL_ELEMENT_ARRAY_BUFFER);
 	}
 
 	///
@@ -67,5 +82,4 @@ class Buffer
 					 data.ptr, GL_STATIC_DRAW);
 		length = data.length;
 	}
-
 }
