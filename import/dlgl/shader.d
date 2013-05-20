@@ -19,9 +19,18 @@ class Shader
 			program;
 	alias program this;
 
+	private this() {}
+
 	this(string filename)
 	{
 		buildShaders(filename.readText());
+	}
+
+	static Shader fromString(string sources)
+	{
+		auto ret = new Shader;
+		ret.buildShaders(sources);
+		return ret;
 	}
 
 	void buildShaders(string src)
@@ -53,7 +62,8 @@ class Shader
 			vertShader = gl!"CreateShader"(GL_VERTEX_SHADER);
 			immutable(char*) source = toStringz((directives ~ *s).join("\n"));
 			gl!"ShaderSource"(vertShader, 1, &source, null);
-			vertShader.compileShader();
+			if (!vertShader.compileShader())
+				throw new Exception("Failed to compile vertex shader");
 		}
 
 		if (auto s = "fragment" in parts)
@@ -61,7 +71,8 @@ class Shader
 			fragShader = gl!"CreateShader"(GL_FRAGMENT_SHADER);
 			immutable(char*) source = toStringz((directives ~ *s).join("\n"));
 			gl!"ShaderSource"(fragShader, 1, &source, null);
-			fragShader.compileShader();
+			if (!fragShader.compileShader())
+				throw new Exception("Failed to compile fragment shader");
 		}
 
 		//TODO geometry shader
@@ -83,6 +94,8 @@ class Shader
 			gl!"GetProgramInfoLog"(program, logLen, null, log.ptr);
 			writeln(to!string(log));
 		}
+		if (ret != GL_TRUE)
+			throw new Exception("Failed to link shader program");
 
 		gl!"DeleteShader"(vertShader);
 		gl!"DeleteShader"(fragShader);
@@ -131,7 +144,7 @@ class Shader
 
 }
  
-private void compileShader(GLuint shader)
+private bool compileShader(GLuint shader)
 {
 	gl!"CompileShader"(shader);
 
@@ -144,6 +157,9 @@ private void compileShader(GLuint shader)
 	{
 		char[] log = new char[](logLen);
 		gl!"GetShaderInfoLog"(shader, logLen, null, log.ptr);
+		version (debugGL)
+			writeln(log);
 	}
 
+	return ret == GL_TRUE;
 } 
